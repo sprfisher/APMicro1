@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Split-Screen Quiz Game</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+    }
+    .container {
+      display: flex;
+      height: 100vh;
+    }
+    .team {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .team.left {
+      background-color: lightblue;
+    }
+    .team.right {
+      background-color: lightgreen;
+    }
+    .question {
+      text-align: center;
+      padding: 20px;
+      background-color: #f8f9fa;
+      position: absolute;
+      width: 100%;
+      top: 10%;
+      font-size: 24px;
+      font-weight: bold;
+      box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .scoreboard {
+      position: absolute;
+      top: 2%;
+      width: 100%;
+      text-align: center;
+      font-size: 18px;
+      font-weight: bold;
+    }
+    .choices {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .choices button {
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      border: none;
+      border-radius: 5px;
+    }
+    .choices button:hover {
+      background-color: #ddd;
+    }
+    .choices button:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+  <div class="scoreboard">Team 1: 0 | Team 2: 0</div>
+  <div class="question">What happens to the equilibrium price if demand increases?</div>
+  <div class="container">
+    <div class="team left">
+      <h2>Team 1</h2>
+      <div class="choices" id="team1-choices">
+        <button onclick="checkAnswer('team1', 'A')">A. Decreases</button>
+        <button onclick="checkAnswer('team1', 'B')">B. Increases</button>
+        <button onclick="checkAnswer('team1', 'C')">C. Stays the same</button>
+        <button onclick="checkAnswer('team1', 'D')">D. None</button>
+      </div>
+    </div>
+    <div class="team right">
+      <h2>Team 2</h2>
+      <div class="choices" id="team2-choices">
+        <button onclick="checkAnswer('team2', '1')">1. Decreases</button>
+        <button onclick="checkAnswer('team2', '2')">2. Increases</button>
+        <button onclick="checkAnswer('team2', '3')">3. Stays the same</button>
+        <button onclick="checkAnswer('team2', '4')">4. None</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+const questions = [
+  {
+    question: "A firm sells 100 units at a price of $10 each. If the total cost is $800, what is the firm's profit?",
+    choicesTeam1: [
+      "A. $100",
+      "B. $200",
+      "C. $800",
+      "D. $1,000"
+    ],
+    choicesTeam2: [
+      "1. $100",
+      "2. $200",
+      "3. $800",
+      "4. $1,000"
+    ],
+    correctTeam1: "B",
+    correctTeam2: "2",
+    explanation: "Profit = Total Revenue - Total Cost. Total Revenue = $10 × 100 = $1,000. Profit = $1,000 - $800 = $200."
+  },
+  {
+    question: "If the price elasticity of demand is 1.5, and price decreases by 10%, by how much will quantity demanded increase?",
+    choicesTeam1: [
+      "A. 5%",
+      "B. 10%",
+      "C. 15%",
+      "D. 20%"
+    ],
+    choicesTeam2: [
+      "1. 5%",
+      "2. 10%",
+      "3. 15%",
+      "4. 20%"
+    ],
+    correctTeam1: "C",
+    correctTeam2: "3",
+    explanation: "Elasticity = (% Change in Quantity Demanded) / (% Change in Price). 1.5 = X / 10. Solve for X: X = 15%."
+  },
+  {
+    question: "A monopolist's marginal revenue is $30, and its marginal cost is $20. To maximize profit, what should the monopolist do?",
+    choicesTeam1: [
+      "A. Increase output",
+      "B. Decrease output",
+      "C. Maintain current output",
+      "D. Shut down"
+    ],
+    choicesTeam2: [
+      "1. Increase output",
+      "2. Decrease output",
+      "3. Maintain current output",
+      "4. Shut down"
+    ],
+    correctTeam1: "A",
+    correctTeam2: "1",
+    explanation: "To maximize profit, a monopolist increases output if MR > MC."
+  },
+  {
+    question: "A firm has fixed costs of $500 and variable costs of $1,000 at an output of 100 units. What is the average total cost?",
+    choicesTeam1: [
+      "A. $5",
+      "B. $10",
+      "C. $15",
+      "D. $20"
+    ],
+    choicesTeam2: [
+      "1. $5",
+      "2. $10",
+      "3. $15",
+      "4. $20"
+    ],
+    correctTeam1: "C",
+    correctTeam2: "3",
+    explanation: "ATC = (Fixed Costs + Variable Costs) / Quantity. ATC = ($500 + $1,000) / 100 = $15."
+  },
+  {
+    question: "A firm's marginal cost increases from $20 to $25 when output increases from 10 to 11 units. What is the marginal cost per additional unit?",
+    choicesTeam1: [
+      "A. $5",
+      "B. $20",
+      "C. $22.50",
+      "D. $25"
+    ],
+    choicesTeam2: [
+      "1. $5",
+      "2. $20",
+      "3. $22.50",
+      "4. $25"
+    ],
+    correctTeam1: "A",
+    correctTeam2: "1",
+    explanation: "Marginal cost measures the additional cost of producing one more unit, which is $25 - $20 = $5."
+  },
+  {
+    question: "If a firm's total revenue increases from $1,000 to $1,200 when price decreases from $20 to $18, what is the price elasticity of demand?",
+    choicesTeam1: [
+      "A. 0.5",
+      "B. 1.0",
+      "C. 1.5",
+      "D. 2.0"
+    ],
+    choicesTeam2: [
+      "1. 0.5",
+      "2. 1.0",
+      "3. 1.5",
+      "4. 2.0"
+    ],
+    correctTeam1: "C",
+    correctTeam2: "3",
+    explanation: "Elasticity = (% Change in Quantity Demanded) / (% Change in Price). Calculate changes in quantity and price to find elasticity = 1.5."
+  },
+  {
+    question: "If a firm operates in a perfectly competitive market, at what point does it maximize profit?",
+    choicesTeam1: [
+      "A. Where marginal revenue equals marginal cost",
+      "B. Where total revenue equals total cost",
+      "C. Where price equals average total cost",
+      "D. Where price equals marginal revenue"
+    ],
+    choicesTeam2: [
+      "1. Where marginal revenue equals marginal cost",
+      "2. Where total revenue equals total cost",
+      "3. Where price equals average total cost",
+      "4. Where price equals marginal revenue"
+    ],
+    correctTeam1: "A",
+    correctTeam2: "1",
+    explanation: "Profit maximization occurs where marginal revenue equals marginal cost (MR = MC) in perfect competition."
+  },
+  {
+    question: "If a consumer's income increases by 20% and their demand for a good increases by 10%, what is the income elasticity of demand for this good?",
+    choicesTeam1: [
+      "A. 0.5",
+      "B. 1.0",
+      "C. 1.5",
+      "D. 2.0"
+    ],
+    choicesTeam2: [
+      "1. 0.5",
+      "2. 1.0",
+      "3. 1.5",
+      "4. 2.0"
+    ],
+    correctTeam1: "A",
+    correctTeam2: "1",
+    explanation: "Income elasticity = (% Change in Quantity Demanded) / (% Change in Income). Elasticity = 10% / 20% = 0.5."
+  },
+  {
+    question: "A perfectly competitive firm faces a market price of $50 and produces 100 units at an average total cost of $45. What is the firm's total profit?",
+    choicesTeam1: [
+      "A. $5,000",
+      "B. $500",
+      "C. $4,500",
+      "D. $50"
+    ],
+    choicesTeam2: [
+      "1. $5,000",
+      "2. $500",
+      "3. $4,500",
+      "4. $50"
+    ],
+    correctTeam1: "B",
+    correctTeam2: "2",
+    explanation: "Profit = (Price - ATC) × Quantity. Profit = ($50 - $45) × 100 = $500."
+  },
+  {
+    question: "If a good has a cross-price elasticity of demand of -2, what type of relationship exists between the two goods?",
+    choicesTeam1: [
+      "A. They are substitutes",
+      "B. They are complements",
+      "C. They are unrelated",
+      "D. There is no relationship"
+    ],
+    choicesTeam2: [
+      "1. They are substitutes",
+      "2. They are complements",
+      "3. They are unrelated",
+      "4. There is no relationship"
+    ],
+    correctTeam1: "B",
+    correctTeam2: "2",
+    explanation: "A negative cross-price elasticity indicates the goods are complements, meaning the demand for one increases as the price of the other decreases."
+  },
+  {
+    question: "A monopolist faces a demand curve P = 100 - 2Q. What is the monopolist's total revenue function?",
+    choicesTeam1: [
+      "A. TR = 100 - Q",
+      "B. TR = 100Q - 2Q^2",
+      "C. TR = 100Q - Q^2",
+      "D. TR = Q - 2Q^2"
+    ],
+    choicesTeam2: [
+      "1. TR = 100 - Q",
+      "2. TR = 100Q - 2Q^2",
+      "3. TR = 100Q - Q^2",
+      "4. TR = Q - 2Q^2"
+    ],
+    correctTeam1: "C",
+    correctTeam2: "3",
+    explanation: "Total Revenue (TR) = Price × Quantity. Substitute P = 100 - 2Q into TR = P × Q to get TR = 100Q - 2Q^2."
+  },
+    {
+    question: "If the marginal cost of producing the 5th unit is $20 and the average total cost at 4 units is $18, what happens to average total cost when the 5th unit is produced?",
+    choicesTeam1: [
+      "A. It increases",
+      "B. It decreases",
+      "C. It stays the same",
+      "D. It cannot be determined"
+    ],
+    choicesTeam2: [
+      "1. It increases",
+      "2. It decreases",
+      "3. It stays the same",
+      "4. It cannot be determined"
+    ],
+    correctTeam1: "A",
+    correctTeam2: "1",
+    explanation: "If marginal cost ($20) exceeds average total cost ($18), average total cost will increase when the additional unit is produced."
+  },
+  {
+    question: "A firm operates in a perfectly competitive market where the price is $30. If the firm's marginal cost at 10 units is $25, what should the firm do?",
+    choicesTeam1: [
+      "A. Produce more units",
+      "B. Produce fewer units",
+      "C. Maintain current output",
+      "D. Shut down"
+    ],
+    choicesTeam2: [
+      "1. Produce more units",
+      "2. Produce fewer units",
+      "3. Maintain current output",
+      "4. Shut down"
+    ],
+    correctTeam1: "A",
+    correctTeam2: "1",
+    explanation: "In a perfectly competitive market, if price (P = $30) is greater than marginal cost (MC = $25), the firm should produce more to maximize profit."
+  },
+  {
+    question: "If a firm's total cost function is TC = 100 + 10Q + Q^2, what is the marginal cost function?",
+    choicesTeam1: [
+      "A. MC = 10 + Q",
+      "B. MC = 10 + 2Q",
+      "C. MC = 100 + 10Q",
+      "D. MC = Q^2"
+    ],
+    choicesTeam2: [
+      "1. MC = 10 + Q",
+      "2. MC = 10 + 2Q",
+      "3. MC = 100 + 10Q",
+      "4. MC = Q^2"
+    ],
+    correctTeam1: "B",
+    correctTeam2: "2",
+    explanation: "The marginal cost (MC) is the derivative of the total cost (TC) function with respect to quantity (Q). MC = d(TC)/dQ = 10 + 2Q."
+  },
+  {
+    question: "A firm’s total cost at 10 units is $500, and its total cost at 11 units is $520. What is the marginal cost of the 11th unit?",
+    choicesTeam1: [
+      "A. $10",
+      "B. $15",
+      "C. $20",
+      "D. $25"
+    ],
+    choicesTeam2: [
+      "1. $10",
+      "2. $15",
+      "3. $20",
+      "4. $25"
+    ],
+    correctTeam1: "C",
+    correctTeam2: "3",
+    explanation: "Marginal cost is the additional cost of producing one more unit. MC = $520 - $500 = $20."
+  },
+  {
+    question: "If a firm’s total revenue is $600, and its price is $30 per unit, how many units has it sold?",
+    choicesTeam1: [
+      "A. 10",
+      "B. 15",
+      "C. 20",
+      "D. 30"
+    ],
+    choicesTeam2: [
+      "1. 10",
+      "2. 15",
+      "3. 20",
+      "4. 30"
+    ],
+    correctTeam1: "C",
+    correctTeam2: "3",
+    explanation: "Total revenue = Price × Quantity. Rearrange for Quantity: Q = Total Revenue / Price = $600 / $30 = 20."
+  },
+  {
+    question: "A monopolist faces the demand curve P = 50 - Q. What is the quantity at which total revenue is maximized?",
+    choicesTeam1: [
+      "A. 10",
+      "B. 25",
+      "C. 50",
+      "D. 75"
+    ],
+    choicesTeam2: [
+      "1. 10",
+      "2. 25",
+      "3. 50",
+      "4. 75"
+    ],
+    correctTeam1: "B",
+    correctTeam2: "2",
+    explanation: "Total revenue is maximized where marginal revenue equals zero. The revenue-maximizing quantity is half the intercept of the demand curve, Q = 25."
+  }
+];
+
+
+    let currentQuestionIndex = 0;
+    let team1Score = 0;
+    let team2Score = 0;
+    let team1Answered = false;
+    let team2Answered = false;
+
+    function loadQuestion() {
+      if (currentQuestionIndex >= questions.length) {
+        endGame();
+        return;
+      }
+
+      const question = questions[currentQuestionIndex];
+      document.querySelector('.question').innerText = question.question;
+
+      const team1Buttons = document.querySelectorAll('#team1-choices button');
+      const team2Buttons = document.querySelectorAll('#team2-choices button');
+
+      team1Buttons.forEach((btn, idx) => {
+        btn.innerText = question.choicesTeam1[idx];
+        btn.disabled = false;
+      });
+
+      team2Buttons.forEach((btn, idx) => {
+        btn.innerText = question.choicesTeam2[idx];
+        btn.disabled = false;
+      });
+
+      team1Answered = false;
+      team2Answered = false;
+    }
+
+function checkAnswer(team, answer) {
+  const question = questions[currentQuestionIndex];
+  let isCorrect = false;
+
+  if (team === "team1" && !team1Answered) {
+    team1Answered = true;
+    if (answer === question.correctTeam1) {
+      team1Score++;
+      isCorrect = true;
+      alert("Team 1 answered correctly!");
+    } else {
+      alert("Team 1 is incorrect.");
+    }
+  } else if (team === "team2" && !team2Answered) {
+    team2Answered = true;
+    if (answer === question.correctTeam2) {
+      team2Score++;
+      isCorrect = true;
+      alert("Team 2 answered correctly!");
+    } else {
+      alert("Team 2 is incorrect.");
+    }
+  }
+
+  updateScoreboard();
+
+  // Automatically load the next question if answered correctly
+  if (isCorrect) {
+    currentQuestionIndex++;
+    loadQuestion();
+  } else if (team1Answered && team2Answered) {
+    // Show explanation if both teams answered incorrectly
+    if (answer !== question.correctTeam1 && answer !== question.correctTeam2) {
+      alert("Explanation: " + question.explanation);
+    }
+    currentQuestionIndex++;
+    loadQuestion();
+  }
+}
+
+    function updateScoreboard() {
+      document.querySelector('.scoreboard').innerText = `Team 1: ${team1Score} | Team 2: ${team2Score}`;
+    }
+
+    function endGame() {
+      const winner = team1Score > team2Score ? "Team 1" : team2Score > team1Score ? "Team 2" : "No one";
+      alert(`Game Over! ${winner} wins!\nFinal Score: Team 1: ${team1Score} | Team 2: ${team2Score}`);
+    }
+
+    // Load the first question
+    loadQuestion();
+  </script>
+</body>
+</html>
